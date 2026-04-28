@@ -6,6 +6,7 @@
 <title>HD-1 // Helpdesk Command Center</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/node-forge@1.3.1/dist/forge.min.js"></script>
 <style>
   :root {
     --bg: #080c10;
@@ -1193,9 +1194,170 @@
     color: var(--accent);
     margin: 2px;
   }
+
+  /* ── LOGIN OVERLAY ── */
+  #login-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  #login-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,217,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,217,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .login-box {
+    position: relative;
+    width: 360px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 36px 32px 32px;
+    box-shadow: 0 0 60px rgba(0,217,255,0.08), 0 0 0 1px var(--border);
+  }
+
+  .login-logo {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--accent);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  .login-sub {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: center;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .login-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .login-box input[type="password"] {
+    width: 100%;
+    margin-bottom: 16px;
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+
+  .login-btn {
+    width: 100%;
+    padding: 11px;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .login-error {
+    color: var(--red);
+    font-size: 11px;
+    text-align: center;
+    margin-top: 10px;
+    min-height: 16px;
+  }
+
+  .login-hint {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── SSL CONVERTER ── */
+  .pfx-drop-zone {
+    border: 1px dashed var(--border2);
+    border-radius: 3px;
+    padding: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: var(--text-dim);
+    position: relative;
+  }
+
+  .pfx-drop-zone:hover,
+  .pfx-drop-zone.drag-over { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+
+  .pfx-drop-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .pfx-file-name {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--green);
+    margin-top: 4px;
+  }
+
+  .pfx-result-box {
+    background: var(--green-dim);
+    border: 1px solid rgba(57,211,83,0.3);
+    border-radius: 3px;
+    padding: 16px;
+    margin-top: 16px;
+    text-align: center;
+  }
+
+  .pfx-result-box .pfx-size {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
 </style>
 </head>
 <body>
+
+<!-- ═══ LOGIN OVERLAY ═══ -->
+<div id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">HD-1</div>
+    <div class="login-sub">Helpdesk Command Center // Restricted Access</div>
+    <div id="login-mode-set" style="display:none">
+      <div class="login-label">Set a password to protect this dashboard</div>
+      <input type="password" id="login-new-pass" placeholder="New password" autocomplete="new-password" />
+      <input type="password" id="login-new-pass2" placeholder="Confirm password" autocomplete="new-password" />
+      <button class="btn login-btn" onclick="loginSetPassword()">▶ Set Password & Enter</button>
+    </div>
+    <div id="login-mode-auth">
+      <div class="login-label">Password</div>
+      <input type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')loginAttempt()" />
+      <button class="btn login-btn" onclick="loginAttempt()">▶ Unlock</button>
+    </div>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-hint" id="login-hint"></div>
+  </div>
+</div>
 
 <div id="toast-container"></div>
 
@@ -1208,6 +1370,7 @@
   <div class="header-right">
     <div class="status-dot"></div>
     <span id="clock"></span>
+    <button class="btn" onclick="loginLogout()" style="font-size:10px;padding:4px 10px;letter-spacing:1px;border-color:var(--border);color:var(--text-dim)" title="Lock dashboard">⊠ Lock</button>
   </div>
 </header>
 
@@ -1248,6 +1411,9 @@
   <div class="tab" data-panel="ssldecode">
     <span class="tab-icon">⊡</span> SSL Decoder
   </div>
+  <div class="tab" data-panel="sslconvert">
+    <span class="tab-icon">⇄</span> SSL → PFX
+  </div>
   <div class="tab" data-panel="pomodoro">
     <span class="tab-icon">◷</span> Pomodoro
   </div>
@@ -1258,7 +1424,7 @@
   <!-- ═══ DASHBOARD HOME ═══ -->
   <div class="panel active" id="panel-home">
     <div class="dash-welcome">Good day, Engineer.</div>
-    <div class="dash-sub">HD-1 Command Center // <span>12 tools ready</span> // All systems operational</div>
+    <div class="dash-sub">HD-1 Command Center // <span>13 tools ready</span> // All systems operational</div>
 
     <div class="grid-4 mb-16">
       <div class="stat-bar">
@@ -1369,6 +1535,13 @@
         <div>
           <div class="tool-card-name">SSL Decoder</div>
           <div class="tool-card-desc">Paste a PEM certificate and decode all fields: subject, SANs, validity, fingerprints, key usage</div>
+        </div>
+      </div>
+      <div class="tool-card" onclick="switchTab('sslconvert')">
+        <span class="tool-card-icon">⇄</span>
+        <div>
+          <div class="tool-card-name">SSL → PFX Converter</div>
+          <div class="tool-card-desc">Convert PEM certificate + private key to a Windows-compatible .pfx / PKCS#12 file, locally in browser</div>
         </div>
       </div>
       <div class="tool-card" onclick="switchTab('pomodoro')">
@@ -1657,6 +1830,50 @@
       </div>
     </div>
     <div id="ssl-decode-results" style="margin-top:16px"></div>
+  </div>
+
+  <!-- ═══ SSL → PFX CONVERTER ═══ -->
+  <div class="panel" id="panel-sslconvert">
+    <div class="card">
+      <div class="card-title"><span class="card-title-accent">⇄</span> SSL → PFX Converter</div>
+      <p style="color:var(--text-dim);font-size:11px;margin-bottom:18px">Convert a PEM certificate + private key into a Windows-compatible <code style="color:var(--accent)">.pfx</code> (PKCS#12) file. Everything runs locally in your browser — nothing is uploaded to any server.</p>
+
+      <div class="grid-2" style="gap:16px;margin-bottom:16px">
+        <div>
+          <div style="font-size:10px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Certificate (.crt / .pem)</div>
+          <div class="pfx-drop-zone" id="pfx-cert-drop">
+            <input type="file" id="pfx-cert-file" accept=".crt,.pem,.cer" onchange="pfxLoadFile('cert',this)">
+            <div>⊞ Drop or click to upload certificate</div>
+            <div class="pfx-file-name" id="pfx-cert-name"></div>
+          </div>
+          <textarea id="pfx-cert-pem" rows="7" placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----" style="font-family:var(--mono);font-size:11px;width:100%;margin-top:6px" oninput="pfxClearFileName('cert')"></textarea>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Private Key (.key / .pem)</div>
+          <div class="pfx-drop-zone" id="pfx-key-drop">
+            <input type="file" id="pfx-key-file" accept=".key,.pem" onchange="pfxLoadFile('key',this)">
+            <div>⊞ Drop or click to upload private key</div>
+            <div class="pfx-file-name" id="pfx-key-name"></div>
+          </div>
+          <textarea id="pfx-key-pem" rows="7" placeholder="-----BEGIN PRIVATE KEY-----&#10;...&#10;-----END PRIVATE KEY-----&#10;&#10;(RSA, EC, or PKCS#8 format accepted)" style="font-family:var(--mono);font-size:11px;width:100%;margin-top:6px" oninput="pfxClearFileName('key')"></textarea>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:0">
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:10px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">PFX Password (optional)</div>
+          <input type="password" id="pfx-password" placeholder="Leave blank for no password" style="width:100%" />
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:10px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Output Filename</div>
+          <input type="text" id="pfx-filename" value="certificate.pfx" style="width:100%" />
+        </div>
+        <button class="btn btn-green" onclick="convertToPfx()" style="white-space:nowrap;flex-shrink:0">⇄ Convert & Download</button>
+        <button class="btn" onclick="pfxClear()" style="border-color:var(--border);color:var(--text-dim);flex-shrink:0">✕ Clear</button>
+      </div>
+
+      <div id="pfx-result"></div>
+    </div>
   </div>
 
   <!-- ═══ POMODORO (IMPROVED) ═══ -->
@@ -3351,6 +3568,183 @@ document.addEventListener('keydown', e => {
 
 // Init stats display
 updateStats();
+
+// ═══════════════════════════════════════════
+// LOGIN SYSTEM
+// ═══════════════════════════════════════════
+
+const LOGIN_KEY = 'hd1_pw_hash';
+const SESSION_KEY = 'hd1_authed';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function loginShowError(msg) {
+  document.getElementById('login-error').textContent = msg;
+}
+
+async function loginAttempt() {
+  const pass = document.getElementById('login-pass').value;
+  if (!pass) { loginShowError('Enter your password.'); return; }
+  const hash = await sha256(pass);
+  const stored = localStorage.getItem(LOGIN_KEY);
+  if (hash === stored) {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('login-pass').value = '';
+    loginShowError('');
+  } else {
+    loginShowError('Incorrect password.');
+    document.getElementById('login-pass').value = '';
+  }
+}
+
+async function loginSetPassword() {
+  const p1 = document.getElementById('login-new-pass').value;
+  const p2 = document.getElementById('login-new-pass2').value;
+  if (!p1) { loginShowError('Password cannot be empty.'); return; }
+  if (p1 !== p2) { loginShowError('Passwords do not match.'); return; }
+  if (p1.length < 6) { loginShowError('Use at least 6 characters.'); return; }
+  const hash = await sha256(p1);
+  localStorage.setItem(LOGIN_KEY, hash);
+  sessionStorage.setItem(SESSION_KEY, '1');
+  document.getElementById('login-overlay').style.display = 'none';
+  loginShowError('');
+  toast('Password set. You are now logged in.', 'success');
+}
+
+function loginInit() {
+  const overlay = document.getElementById('login-overlay');
+  if (sessionStorage.getItem(SESSION_KEY) === '1') {
+    overlay.style.display = 'none';
+    return;
+  }
+  const hasPassword = !!localStorage.getItem(LOGIN_KEY);
+  if (hasPassword) {
+    document.getElementById('login-mode-auth').style.display = '';
+    document.getElementById('login-mode-set').style.display = 'none';
+    document.getElementById('login-hint').textContent = 'Session expired. Please re-enter your password.';
+    setTimeout(() => document.getElementById('login-pass').focus(), 100);
+  } else {
+    document.getElementById('login-mode-auth').style.display = 'none';
+    document.getElementById('login-mode-set').style.display = '';
+    document.getElementById('login-hint').textContent = 'First time? Set a password to secure this dashboard.';
+    setTimeout(() => document.getElementById('login-new-pass').focus(), 100);
+  }
+}
+
+function loginLogout() {
+  sessionStorage.removeItem(SESSION_KEY);
+  const overlay = document.getElementById('login-overlay');
+  overlay.style.display = 'flex';
+  document.getElementById('login-mode-auth').style.display = '';
+  document.getElementById('login-mode-set').style.display = 'none';
+  document.getElementById('login-hint').textContent = 'Dashboard locked.';
+  document.getElementById('login-error').textContent = '';
+  setTimeout(() => document.getElementById('login-pass').focus(), 100);
+}
+
+loginInit();
+
+// ═══════════════════════════════════════════
+// SSL → PFX CONVERTER
+// ═══════════════════════════════════════════
+
+function pfxLoadFile(type, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const nameEl = document.getElementById(`pfx-${type}-name`);
+  nameEl.textContent = '✓ ' + file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById(`pfx-${type}-pem`).value = e.target.result;
+  };
+  reader.readAsText(file);
+}
+
+function pfxClearFileName(type) {
+  document.getElementById(`pfx-${type}-name`).textContent = '';
+}
+
+function pfxClear() {
+  ['cert','key'].forEach(t => {
+    document.getElementById(`pfx-${t}-pem`).value = '';
+    document.getElementById(`pfx-${t}-name`).textContent = '';
+    document.getElementById(`pfx-${t}-file`).value = '';
+  });
+  document.getElementById('pfx-password').value = '';
+  document.getElementById('pfx-filename').value = 'certificate.pfx';
+  document.getElementById('pfx-result').innerHTML = '';
+}
+
+function convertToPfx() {
+  const certPem = document.getElementById('pfx-cert-pem').value.trim();
+  const keyPem  = document.getElementById('pfx-key-pem').value.trim();
+  const password = document.getElementById('pfx-password').value;
+  const filename = document.getElementById('pfx-filename').value.trim() || 'certificate.pfx';
+  const resultEl = document.getElementById('pfx-result');
+
+  if (!certPem) { toast('Paste or upload a certificate first.', 'error'); return; }
+  if (!keyPem)  { toast('Paste or upload a private key first.', 'error'); return; }
+
+  try {
+    const cert = forge.pki.certificateFromPem(certPem);
+    let privateKey;
+    try {
+      privateKey = forge.pki.privateKeyFromPem(keyPem);
+    } catch {
+      // Try PKCS#8 encrypted or alternate header
+      privateKey = forge.pki.decryptRsaPrivateKey(keyPem, '');
+      if (!privateKey) throw new Error('Could not parse private key. Ensure it is unencrypted PEM.');
+    }
+
+    const p12Asn1 = forge.pkcs12.toPkcs12Asn1(privateKey, [cert], password || null, {
+      algorithm: '3des',
+      friendlyName: cert.subject.getField('CN') ? cert.subject.getField('CN').value : 'certificate'
+    });
+    const p12Der = forge.asn1.toDer(p12Asn1).getBytes();
+    const p12B64 = forge.util.encode64(p12Der);
+
+    const byteChars = atob(p12B64);
+    const byteArr = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
+    const blob = new Blob([byteArr], { type: 'application/x-pkcs12' });
+    const url = URL.createObjectURL(blob);
+
+    const sizeKB = (blob.size / 1024).toFixed(1);
+    const cn = cert.subject.getField('CN') ? cert.subject.getField('CN').value : '(no CN)';
+
+    resultEl.innerHTML = `
+      <div class="pfx-result-box">
+        <div style="color:var(--green);font-family:var(--sans);font-weight:700;font-size:13px;margin-bottom:6px">✓ PFX Generated Successfully</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:12px">CN: <span style="color:var(--text-bright);font-family:var(--mono)">${cn}</span> &nbsp;·&nbsp; Size: ${sizeKB} KB${password ? ' &nbsp;·&nbsp; Password protected' : ' &nbsp;·&nbsp; No password'}</div>
+        <a href="${url}" download="${filename}" class="btn btn-green" style="display:inline-block;text-decoration:none">⬇ Download ${filename}</a>
+      </div>`;
+    toast('PFX ready — click Download.', 'success');
+  } catch (err) {
+    resultEl.innerHTML = `<div style="color:var(--red);background:var(--red-dim);border:1px solid rgba(255,71,87,0.3);border-radius:3px;padding:14px;margin-top:16px;font-size:12px"><strong>Conversion failed:</strong> ${err.message}</div>`;
+    toast('Conversion failed — check inputs.', 'error');
+  }
+}
+
+// Drag-over styling for drop zones
+document.querySelectorAll('.pfx-drop-zone').forEach(zone => {
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    const type = zone.id.includes('cert') ? 'cert' : 'key';
+    document.getElementById(`pfx-${type}-name`).textContent = '✓ ' + file.name;
+    const reader = new FileReader();
+    reader.onload = ev => { document.getElementById(`pfx-${type}-pem`).value = ev.target.result; };
+    reader.readAsText(file);
+  });
+});
 </script>
 </body>
 </html>
