@@ -951,6 +951,78 @@
     gap: 12px;
   }
 
+  .tool-category {
+    margin-bottom: 24px;
+  }
+
+  .tool-category-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-family: var(--sans);
+    font-weight: 700;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tool-category-label::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 12px;
+    background: var(--accent);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .tool-category-label.green::before { background: var(--green); }
+  .tool-category-label.yellow::before { background: var(--yellow); }
+  .tool-category-label.purple::before { background: var(--purple); }
+  .tool-category-label.ext::before { background: linear-gradient(135deg, var(--accent), var(--purple)); }
+
+  /* External tool cards — open in new tab */
+  .tool-card.external {
+    border-color: var(--border2);
+    position: relative;
+  }
+
+  .tool-card.external:hover {
+    border-color: var(--purple);
+    background: rgba(168,85,247,0.06);
+    box-shadow: 0 0 20px rgba(168,85,247,0.15);
+  }
+
+  .tool-card.external .tool-card-name { color: var(--text-bright); }
+
+  .ext-badge {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--purple);
+    background: rgba(168,85,247,0.1);
+    border: 1px solid rgba(168,85,247,0.3);
+    border-radius: 2px;
+    padding: 2px 7px;
+    font-family: var(--sans);
+    font-weight: 700;
+  }
+
+  .ext-url {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    margin-top: 5px;
+    word-break: break-all;
+  }
+
   .stat-bar {
     background: var(--bg2);
     border: 1px solid var(--border);
@@ -1364,7 +1436,7 @@
 <header>
   <div class="logo">
     <span>HD-1</span>
-    <span class="logo-badge">v2.2</span>
+    <span class="logo-badge">v2.3</span>
     <span style="color:var(--text-dim);font-family:var(--code);font-size:11px;font-weight:400;letter-spacing:1px;margin-left:4px">// Command Center</span>
   </div>
   <div class="header-right">
@@ -1424,7 +1496,7 @@
   <!-- ═══ DASHBOARD HOME ═══ -->
   <div class="panel active" id="panel-home">
     <div class="dash-welcome">Good day, Engineer.</div>
-    <div class="dash-sub">HD-1 Command Center // <span>13 tools ready</span> // All systems operational</div>
+    <div class="dash-sub">HD-1 Command Center // <span>13 built-in tools</span> // <span>2 external apps</span> // All systems operational</div>
 
     <div class="grid-4 mb-16">
       <div class="stat-bar">
@@ -1457,101 +1529,143 @@
       </div>
     </div>
 
-    <div class="section-label">Available Tools</div>
-
-    <div class="grid-tools">
-      <div class="tool-card" onclick="switchTab('dns')">
-        <span class="tool-card-icon">⊕</span>
-        <div>
-          <div class="tool-card-name">DNS Lookup</div>
-          <div class="tool-card-desc">Query A, AAAA, MX, TXT, NS, CNAME records via public DNS API</div>
+    <!-- Networking -->
+    <div class="tool-category">
+      <div class="tool-category-label">Networking</div>
+      <div class="grid-tools">
+        <div class="tool-card" onclick="switchTab('dns')">
+          <span class="tool-card-icon">⊕</span>
+          <div>
+            <div class="tool-card-name">DNS Lookup</div>
+            <div class="tool-card-desc">Query A, AAAA, MX, TXT, NS, CNAME records via public DNS API</div>
+          </div>
         </div>
-      </div>
-      <div class="tool-card" onclick="switchTab('whois')">
-        <span class="tool-card-icon">◎</span>
-        <div>
-          <div class="tool-card-name">WHOIS</div>
-          <div class="tool-card-desc">Domain registration, registrar, nameservers, expiry dates</div>
+        <div class="tool-card" onclick="switchTab('whois')">
+          <span class="tool-card-icon">◎</span>
+          <div>
+            <div class="tool-card-name">WHOIS</div>
+            <div class="tool-card-desc">Domain registration, registrar, nameservers, expiry dates</div>
+          </div>
         </div>
-      </div>
-      <div class="tool-card" onclick="switchTab('geo')">
-        <span class="tool-card-icon">◉</span>
-        <div>
-          <div class="tool-card-name">IP Geolocation</div>
-          <div class="tool-card-desc">Location, ASN, ISP, timezone and threat score for any IP</div>
+        <div class="tool-card" onclick="switchTab('geo')">
+          <span class="tool-card-icon">◉</span>
+          <div>
+            <div class="tool-card-name">IP Geolocation</div>
+            <div class="tool-card-desc">Location, ASN, ISP, timezone and threat score for any IP</div>
+          </div>
         </div>
-      </div>
-      <div class="tool-card" onclick="switchTab('ping')">
-        <span class="tool-card-icon">◈</span>
-        <div>
-          <div class="tool-card-name">Ping / Latency</div>
-          <div class="tool-card-desc">HTTP latency test with response time visualization</div>
+        <div class="tool-card" onclick="switchTab('ping')">
+          <span class="tool-card-icon">◈</span>
+          <div>
+            <div class="tool-card-name">Ping / Latency</div>
+            <div class="tool-card-desc">HTTP latency test with response time visualization</div>
+          </div>
         </div>
-      </div>
-      <div class="tool-card" onclick="switchTab('ssl')">
-        <span class="tool-card-icon">⊞</span>
-        <div>
-          <div class="tool-card-name">SSL Checker</div>
-          <div class="tool-card-desc">Certificate validity, expiry, issuer and cipher details</div>
+        <div class="tool-card" onclick="switchTab('subnet')">
+          <span class="tool-card-icon">◫</span>
+          <div>
+            <div class="tool-card-name">Subnet Calculator</div>
+            <div class="tool-card-desc">CIDR breakdown, network/broadcast, usable host range</div>
+          </div>
         </div>
-      </div>
-      <div class="tool-card" onclick="switchTab('virustotal')">
-        <span class="tool-card-icon">⚠</span>
-        <div>
-          <div class="tool-card-name">VirusTotal</div>
-          <div class="tool-card-desc">Scan URLs, IPs and file hashes against 70+ AV engines</div>
-        </div>
-      </div>
-      <div class="tool-card" onclick="switchTab('subnet')">
-        <span class="tool-card-icon">◫</span>
-        <div>
-          <div class="tool-card-name">Subnet Calculator</div>
-          <div class="tool-card-desc">CIDR breakdown, network/broadcast, usable host range</div>
-        </div>
-      </div>
-      <div class="tool-card" onclick="switchTab('encoder')">
-        <span class="tool-card-icon">⌬</span>
-        <div>
-          <div class="tool-card-name">Encoder / Decoder</div>
-          <div class="tool-card-desc">Base64, URL encode, hex, MD5/SHA hash utilities</div>
-        </div>
-      </div>
-      <div class="tool-card" onclick="switchTab('passgen')">
-        <span class="tool-card-icon">⊛</span>
-        <div>
-          <div class="tool-card-name">Password Generator</div>
-          <div class="tool-card-desc">Cryptographically secure passwords with strength meter</div>
-        </div>
-      </div>
-      <div class="tool-card" onclick="switchTab('headers')">
-        <span class="tool-card-icon">⊟</span>
-        <div>
-          <div class="tool-card-name">HTTP Headers</div>
-          <div class="tool-card-desc">Inspect response headers and security header grades</div>
-        </div>
-      </div>
-      <div class="tool-card" onclick="switchTab('ssldecode')">
-        <span class="tool-card-icon">⊡</span>
-        <div>
-          <div class="tool-card-name">SSL Decoder</div>
-          <div class="tool-card-desc">Paste a PEM certificate and decode all fields: subject, SANs, validity, fingerprints, key usage</div>
-        </div>
-      </div>
-      <div class="tool-card" onclick="switchTab('sslconvert')">
-        <span class="tool-card-icon">⇄</span>
-        <div>
-          <div class="tool-card-name">SSL → PFX Converter</div>
-          <div class="tool-card-desc">Convert PEM certificate + private key to a Windows-compatible .pfx / PKCS#12 file, locally in browser</div>
-        </div>
-      </div>
-      <div class="tool-card" onclick="switchTab('pomodoro')">
-        <span class="tool-card-icon">◷</span>
-        <div>
-          <div class="tool-card-name">Pomodoro Timer</div>
-          <div class="tool-card-desc">Focus sessions with customizable work/break intervals</div>
+        <div class="tool-card" onclick="switchTab('headers')">
+          <span class="tool-card-icon">⊟</span>
+          <div>
+            <div class="tool-card-name">HTTP Headers</div>
+            <div class="tool-card-desc">Inspect response headers and security header grades</div>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Security -->
+    <div class="tool-category">
+      <div class="tool-category-label green">Security</div>
+      <div class="grid-tools">
+        <div class="tool-card" onclick="switchTab('virustotal')">
+          <span class="tool-card-icon">⚠</span>
+          <div>
+            <div class="tool-card-name">VirusTotal</div>
+            <div class="tool-card-desc">Scan URLs, IPs and file hashes against 70+ AV engines</div>
+          </div>
+        </div>
+        <div class="tool-card" onclick="switchTab('ssl')">
+          <span class="tool-card-icon">⊞</span>
+          <div>
+            <div class="tool-card-name">SSL Checker</div>
+            <div class="tool-card-desc">Certificate validity, expiry, issuer and cipher details</div>
+          </div>
+        </div>
+        <div class="tool-card" onclick="switchTab('ssldecode')">
+          <span class="tool-card-icon">⊡</span>
+          <div>
+            <div class="tool-card-name">SSL Decoder</div>
+            <div class="tool-card-desc">Decode a PEM certificate — subject, SANs, validity, fingerprints, key usage</div>
+          </div>
+        </div>
+        <div class="tool-card" onclick="switchTab('sslconvert')">
+          <span class="tool-card-icon">⇄</span>
+          <div>
+            <div class="tool-card-name">SSL → PFX Converter</div>
+            <div class="tool-card-desc">Convert PEM cert + private key to a Windows-compatible .pfx / PKCS#12 file</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Utilities -->
+    <div class="tool-category">
+      <div class="tool-category-label yellow">Utilities</div>
+      <div class="grid-tools">
+        <div class="tool-card" onclick="switchTab('encoder')">
+          <span class="tool-card-icon">⌬</span>
+          <div>
+            <div class="tool-card-name">Encoder / Decoder</div>
+            <div class="tool-card-desc">Base64, URL encode, hex, MD5/SHA hash utilities</div>
+          </div>
+        </div>
+        <div class="tool-card" onclick="switchTab('passgen')">
+          <span class="tool-card-icon">⊛</span>
+          <div>
+            <div class="tool-card-name">Password Generator</div>
+            <div class="tool-card-desc">Cryptographically secure passwords with strength meter</div>
+          </div>
+        </div>
+        <div class="tool-card" onclick="switchTab('pomodoro')">
+          <span class="tool-card-icon">◷</span>
+          <div>
+            <div class="tool-card-name">Pomodoro Timer</div>
+            <div class="tool-card-desc">Focus sessions with customizable work/break intervals</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- External Apps -->
+    <div class="tool-category">
+      <div class="tool-category-label ext">External Apps</div>
+      <div class="grid-tools">
+        <div class="tool-card external" onclick="window.open('https://iis-inspector.netlify.app/','_blank')" style="cursor:pointer">
+          <span class="ext-badge">↗ External</span>
+          <span class="tool-card-icon">⊗</span>
+          <div>
+            <div class="tool-card-name">IIS Lens</div>
+            <div class="tool-card-desc">IIS log inspector — parse and analyze IIS access logs, identify errors, slow requests and traffic patterns</div>
+            <div class="ext-url">iis-inspector.netlify.app</div>
+          </div>
+        </div>
+        <div class="tool-card external" onclick="window.open('https://kqlbuilder.netlify.app/','_blank')" style="cursor:pointer">
+          <span class="ext-badge">↗ External</span>
+          <span class="tool-card-icon">⊘</span>
+          <div>
+            <div class="tool-card-name">KQL Forge</div>
+            <div class="tool-card-desc">KQL query builder for Content Searches and eDiscoveries in Microsoft 365 / Purview</div>
+            <div class="ext-url">kqlbuilder.netlify.app</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- ═══ DNS LOOKUP ═══ -->
